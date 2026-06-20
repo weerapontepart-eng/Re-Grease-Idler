@@ -1,0 +1,10 @@
+# ไฟล์ Excel ต้นฉบับ (ข้อมูลภายใน ไม่ใช่ส่วนของแอป)
+*.xlsx
+
+# โฟลเดอร์แตกไฟล์ชั่วคราว
+_xlsx_extract/
+
+# editor / OS
+.DS_Store
+Thumbs.db
+*.tmp
