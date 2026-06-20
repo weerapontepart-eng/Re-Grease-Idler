@@ -428,8 +428,12 @@ const SCRIPT_KEY = 'regrease_script_url';
 const LOCAL_KEY  = 'regrease_local_v1';
 const LAST_FORM_KEY = 'regrease_last_form';
 
-let SHEET_ID   = localStorage.getItem(SHEET_KEY) || '';
-let SCRIPT_URL = localStorage.getItem(SCRIPT_KEY) || '';
+// ค่าเริ่มต้น (ตั้งค่าในแท็บ "ตั้งค่า" เพื่อ override ต่อเครื่องได้)
+const DEFAULT_SHEET_ID   = '1PeVjEyqhgjFVPD9pYoqVI5_lSFB1FPyd5JbNv8w42Qs';
+const DEFAULT_SCRIPT_URL = '';
+
+let SHEET_ID   = localStorage.getItem(SHEET_KEY) || DEFAULT_SHEET_ID;
+let SCRIPT_URL = localStorage.getItem(SCRIPT_KEY) || DEFAULT_SCRIPT_URL;
 const csvUrl = () => `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
 const MONTHS_TH  = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -444,7 +448,6 @@ let sheetData = [], localData = [], allData = [];
 
 // ─── APPS SCRIPT CODE (shown in settings) ─────────────────────
 const GS_CODE = `// ===== Re-Grease Idler — Google Apps Script =====
-const SHEET_NAME = 'Records';
 const HEADERS = ['date','work_type','belt','roller_type','position','bearing','material','rubber','seal',
                  'qty_rollers','qty_sets','manpower','team','contractor_name','line','recorder','note','timestamp'];
 
@@ -458,7 +461,7 @@ function doGet(e){
 
 function append_(p){
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
+  var sh = ss.getSheets()[0];                 // เขียนลงชีตแรก (gid=0) ให้ตรงกับที่แอปอ่าน
   if(sh.getLastRow() === 0) sh.appendRow(HEADERS);
   var row = HEADERS.map(function(h){
     return h === 'timestamp' ? new Date() : (p[h] != null ? p[h] : '');
