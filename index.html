@@ -323,11 +323,6 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
     <div class="metrics" id="d-metrics"></div>
 
     <div class="card">
-      <div class="card-title">Re-Grease เทียบกับ งานติดตั้ง</div>
-      <div id="chart-worksplit"></div>
-    </div>
-
-    <div class="card">
       <div class="card-title">ผลงานรายเดือน (จำนวนลูก) แยกตาม Belt Width</div>
       <div class="month-chart" id="chart-month"></div>
       <div class="chart-legend">
@@ -890,7 +885,6 @@ function renderDashboard(){
     <div class="metric" style="--mcolor:#f59e0b"><div class="metric-label">จำนวนรายการ</div>
       <div class="metric-value" style="color:#fbbf24">${data.length.toLocaleString()}</div><div class="metric-sub">รายการ</div></div>`;
 
-  renderWorkSplit(data, sum);
   renderMonthChart(year, belt, work);
 
   // by type (donut)
@@ -955,30 +949,6 @@ function renderDashboard(){
       <td class="num" style="font-weight:600">${gt.b22.toLocaleString()}</td>
       <td class="num" style="font-weight:600;color:#60a5fa">${gt.tot.toLocaleString()}</td>
       <td class="num" style="font-weight:600;color:#4ade80">${gt.st.toLocaleString()}</td></tr>`;
-}
-
-function renderWorkSplit(data, sum){
-  const el = document.getElementById('chart-worksplit');
-  const rg   = data.filter(r=>r.work_type==='Re-Grease');
-  const inst = data.filter(r=>r.work_type==='ติดตั้ง');
-  const rgR = sum(rg,'qty_rollers'), inR = sum(inst,'qty_rollers');
-  const total = rgR + inR;
-  if(!total){ el.innerHTML = `<div style="color:var(--text3);font-size:12px;padding:.5rem">ไม่มีข้อมูล</div>`; return; }
-  const rgPct = Math.round(rgR/total*100), inPct = 100 - rgPct;
-  const seg = (w,color,label)=> w>0 ? `<div class="split-seg" style="width:${w}%;background:${color}">${w>=12?label+' '+w+'%':''}</div>` : '';
-  const stat = (color,name,arr)=>`
-    <div class="split-stat">
-      <div class="st-h"><span class="st-dot" style="background:${color}"></span>${name}</div>
-      <div class="st-grid">
-        <div class="st-kv"><span class="k">ลูก</span><span class="v">${sum(arr,'qty_rollers').toLocaleString()}</span></div>
-        <div class="st-kv"><span class="k">พวง</span><span class="v">${sum(arr,'qty_sets').toLocaleString()}</span></div>
-        <div class="st-kv"><span class="k">คน</span><span class="v">${sum(arr,'manpower').toLocaleString()}</span></div>
-        <div class="st-kv"><span class="k">รายการ</span><span class="v">${arr.length.toLocaleString()}</span></div>
-      </div>
-    </div>`;
-  el.innerHTML =
-    `<div class="split-bar">${seg(rgPct,WORK_COLORS['Re-Grease'],'Re-Grease')}${seg(inPct,WORK_COLORS['ติดตั้ง'],'ติดตั้ง')}</div>` +
-    `<div class="split-stats">${stat(WORK_COLORS['Re-Grease'],'Re-Grease',rg)}${stat(WORK_COLORS['ติดตั้ง'],'งานติดตั้ง',inst)}</div>`;
 }
 
 function renderMonthChart(year, belt, work){
