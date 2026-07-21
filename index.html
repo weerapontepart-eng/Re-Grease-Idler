@@ -336,8 +336,8 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
       <div class="card-title">ผลงานรายเดือน (จำนวนลูก) แยกตาม Belt Width</div>
       <div class="month-chart" id="chart-month"></div>
       <div class="chart-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#3d8ef0"></div><span>BW1800</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:#2ecc71"></div><span>BW2200</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3d8ef0"></div><span>BW1800</span></div>
       </div>
     </div>
 
@@ -1019,7 +1019,7 @@ function renderMonthChart(year, belt, work){
     const a=M[m].BW1800, b=M[m].BW2200;
     html += `<div class="mc-col">
       <div class="mc-bars" title="${MONTHS_FULL[m]}">
-        ${bar(a,'#3d8ef0','BW1800')}${bar(b,'#2ecc71','BW2200')}
+        ${bar(b,'#2ecc71','BW2200')}${bar(a,'#3d8ef0','BW1800')}
       </div>
       <span class="mc-lbl">${MONTHS_TH[m]}</span>
     </div>`;
