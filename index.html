@@ -988,7 +988,7 @@ function renderMonthlyTypeChart(year, belt, work){
       const h = Math.max(Math.round(v/max*150), 2);
       segs += `<div class="dc-seg" style="height:${h}px;background:${TYPE_COLORS[t]||TYPE_COLORS.default}" title="${beltLabel} · ${t}: ${v}"></div>`;
     });
-    return `<div class="tm-barwrap"><span class="dc-total">${tot||''}</span><div class="dc-stack" title="${beltLabel} · รวม ${tot} พวง">${segs}</div><span class="tm-belt">${beltLabel.replace('BW','')}</span></div>`;
+    return `<div class="tm-barwrap"><span class="dc-total">${tot||''}</span><div class="dc-stack" title="${beltLabel} · รวม ${tot} พวง">${segs}</div></div>`;
   };
   let html='';
   for(let m=1;m<=12;m++){
