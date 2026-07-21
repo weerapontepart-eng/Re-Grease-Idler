@@ -151,12 +151,15 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
 .mc-bar{width:12px;border-radius:3px 3px 0 0;min-height:0;transition:height .3s}
 .mc-v{font-size:9px;font-family:var(--mono);color:var(--text2);margin-bottom:2px;line-height:1}
 .mc-lbl{font-size:10px;color:var(--text3)}
-/* daily stacked-by-type chart */
+/* monthly stacked-by-type chart, grouped by belt */
 .day-chart{display:flex;align-items:flex-end;gap:5px;height:210px;padding-top:10px;overflow-x:auto}
-.dc-col{flex:1;min-width:32px;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end}
-.dc-stack{width:16px;display:flex;flex-direction:column-reverse;border-radius:3px 3px 0 0;overflow:hidden}
+.dc-col{flex:1;min-width:48px;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.tm-bars{display:flex;align-items:flex-end;justify-content:center;gap:3px;height:100%;width:100%}
+.tm-barwrap{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.tm-belt{font-size:8px;color:var(--text3);margin-top:2px;line-height:1}
+.dc-stack{width:13px;display:flex;flex-direction:column-reverse;border-radius:3px 3px 0 0;overflow:hidden}
 .dc-seg{width:100%}
-.dc-total{font-size:9px;font-family:var(--mono);color:var(--text2);line-height:1}
+.dc-total{font-size:9px;font-family:var(--mono);color:var(--text2);line-height:1;margin-bottom:2px}
 .dc-lbl{font-size:9px;color:var(--text3);white-space:nowrap}
 .chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:.75rem;justify-content:center}
 .chart-legend .legend-item{font-size:11px}
@@ -968,31 +971,34 @@ function renderDashboard(){
 function renderMonthlyTypeChart(year, belt, work){
   const el = document.getElementById('chart-typemonth');
   const leg = document.getElementById('typemonth-legend');
-  const base = allData.filter(r=>yearOf(r.date)===year && (!belt||r.belt===belt) && (!work||r.work_type===work));
+  const belts = belt ? [belt] : ['BW1800','BW2200'];
+  const base = allData.filter(r=>yearOf(r.date)===year && (!work||r.work_type===work) && belts.includes(r.belt));
+  // M[m][belt][type] = sets
   const M = Array.from({length:13},()=>({}));
-  base.forEach(r=>{ const m=monthOf(r.date), t=r.roller_type; if(m && t) M[m][t]=(M[m][t]||0)+num(r.qty_sets); });
-  let max = 0; for(let m=1;m<=12;m++){ const tot=Object.values(M[m]).reduce((a,b)=>a+b,0); if(tot>max) max=tot; }
+  base.forEach(r=>{ const m=monthOf(r.date), b=r.belt, t=r.roller_type; if(m && b && t){ (M[m][b]=M[m][b]||{})[t]=(M[m][b][t]||0)+num(r.qty_sets); } });
+  const barTotal = o => Object.values(o||{}).reduce((a,b)=>a+b,0);
+  let max = 0; for(let m=1;m<=12;m++){ belts.forEach(b=>{ const t=barTotal(M[m][b]); if(t>max) max=t; }); }
   if(max===0){ el.innerHTML = `<div style="color:var(--text3);font-size:12px;margin:auto">ไม่มีข้อมูลในปี ${year}</div>`; leg.innerHTML=''; return; }
   const present = new Set();
-  let html='';
-  for(let m=1;m<=12;m++){
-    const day = M[m];
-    const tot = Object.values(day).reduce((a,b)=>a+b,0);
+  const barHtml = (types, beltLabel) => {
+    const tot = barTotal(types);
     let segs='';
     ALL_TYPES.forEach(t=>{
-      const v = day[t]||0; if(!v) return; present.add(t);
+      const v = (types||{})[t]||0; if(!v) return; present.add(t);
       const h = Math.max(Math.round(v/max*150), 2);
-      segs += `<div class="dc-seg" style="height:${h}px;background:${TYPE_COLORS[t]||TYPE_COLORS.default}" title="${t}: ${v}"></div>`;
+      segs += `<div class="dc-seg" style="height:${h}px;background:${TYPE_COLORS[t]||TYPE_COLORS.default}" title="${beltLabel} · ${t}: ${v}"></div>`;
     });
-    html += `<div class="dc-col">
-      <span class="dc-total">${tot||''}</span>
-      <div class="dc-stack" title="${MONTHS_FULL[m]} · รวม ${tot} พวง">${segs}</div>
-      <span class="dc-lbl">${MONTHS_TH[m]}</span>
-    </div>`;
+    return `<div class="tm-barwrap"><span class="dc-total">${tot||''}</span><div class="dc-stack" title="${beltLabel} · รวม ${tot} พวง">${segs}</div><span class="tm-belt">${beltLabel.replace('BW','')}</span></div>`;
+  };
+  let html='';
+  for(let m=1;m<=12;m++){
+    html += `<div class="dc-col"><div class="tm-bars">${belts.map(b=>barHtml(M[m][b], b)).join('')}</div><span class="dc-lbl">${MONTHS_TH[m]}</span></div>`;
   }
   el.innerHTML = html;
-  leg.innerHTML = ALL_TYPES.filter(t=>present.has(t)).map(t=>
+  const typeLeg = ALL_TYPES.filter(t=>present.has(t)).map(t=>
     `<div class="legend-item"><div class="legend-dot" style="background:${TYPE_COLORS[t]}"></div><span>${t}</span></div>`).join('');
+  const beltNote = belts.length>1 ? `<div class="legend-item" style="color:var(--text3)"><span>· แต่ละเดือน: แท่งซ้าย 1800 · แท่งขวา 2200</span></div>` : '';
+  leg.innerHTML = typeLeg + beltNote;
 }
 
 function renderMonthChart(year, belt, work){
