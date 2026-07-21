@@ -336,7 +336,7 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
       </div>
     </div>
 
-    <div class="chart-grid">
+    <div class="chart-grid three">
       <div class="card">
         <div class="card-title">แยกตามประเภทลูกกลิ้ง (ลูก)</div>
         <div id="chart-type"></div>
@@ -345,16 +345,9 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
         <div class="card-title">แยกตาม Belt Width (ลูก)</div>
         <div id="chart-belt"></div>
       </div>
-    </div>
-
-    <div class="chart-grid">
       <div class="card">
         <div class="card-title">แยกตามทีมงาน (ITH vs Contractor)</div>
         <div id="chart-team"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">แยกตามวัสดุลูกกลิ้ง (Return / Flat Return)</div>
-        <div class="barh" id="chart-material"></div>
       </div>
     </div>
 
@@ -916,13 +909,6 @@ function renderDashboard(){
   const teamCnt = {};
   data.forEach(r=>{ const k=r.team; if(k) teamCnt[k]=(teamCnt[k]||0)+num(r.qty_rollers); });
   renderDonut('chart-team', Object.entries(teamCnt).sort((a,b)=>b[1]-a[1]), totRollers, TEAM_COLORS);
-
-  // by material (Return / Flat Return)
-  const mCnt = {};
-  data.filter(r=>r.roller_type==='Return'||r.roller_type==='Flat Return').forEach(r=>{
-    const k=r.material; if(k && k!=='-') mCnt[k]=(mCnt[k]||0)+num(r.qty_rollers);
-  });
-  renderBarh('chart-material', Object.entries(mCnt).sort((a,b)=>b[1]-a[1]), MATERIAL_COLORS, '#64748b');
 
   // by bearing (Re-Grease only)
   const bCnt = {};
