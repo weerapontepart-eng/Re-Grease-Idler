@@ -151,6 +151,13 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
 .mc-bar{width:12px;border-radius:3px 3px 0 0;min-height:0;transition:height .3s}
 .mc-v{font-size:9px;font-family:var(--mono);color:var(--text2);margin-bottom:2px;line-height:1}
 .mc-lbl{font-size:10px;color:var(--text3)}
+/* daily stacked-by-type chart */
+.day-chart{display:flex;align-items:flex-end;gap:5px;height:210px;padding-top:10px;overflow-x:auto}
+.dc-col{flex:1;min-width:32px;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end}
+.dc-stack{width:16px;display:flex;flex-direction:column-reverse;border-radius:3px 3px 0 0;overflow:hidden}
+.dc-seg{width:100%}
+.dc-total{font-size:9px;font-family:var(--mono);color:var(--text2);line-height:1}
+.dc-lbl{font-size:9px;color:var(--text3);white-space:nowrap}
 .chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:.75rem;justify-content:center}
 .chart-legend .legend-item{font-size:11px}
 
@@ -329,6 +336,12 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
         <div class="legend-item"><div class="legend-dot" style="background:#3d8ef0"></div><span>BW1800</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:#2ecc71"></div><span>BW2200</span></div>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">ผลงานประจำวัน (จำนวนลูก) แยกตามประเภทลูกกลิ้ง</div>
+      <div class="day-chart" id="chart-daily"></div>
+      <div class="chart-legend" id="daily-legend"></div>
     </div>
 
     <div class="chart-grid three">
@@ -886,6 +899,7 @@ function renderDashboard(){
       <div class="metric-value" style="color:#fbbf24">${data.length.toLocaleString()}</div><div class="metric-sub">รายการ</div></div>`;
 
   renderMonthChart(year, belt, work);
+  renderDailyChart(data);
 
   // by type (donut)
   const typeCnt = {};
@@ -949,6 +963,43 @@ function renderDashboard(){
       <td class="num" style="font-weight:600">${gt.b22.toLocaleString()}</td>
       <td class="num" style="font-weight:600;color:#60a5fa">${gt.tot.toLocaleString()}</td>
       <td class="num" style="font-weight:600;color:#4ade80">${gt.st.toLocaleString()}</td></tr>`;
+}
+
+function renderDailyChart(data){
+  const el = document.getElementById('chart-daily');
+  const leg = document.getElementById('daily-legend');
+  const byDate = {};
+  data.forEach(r=>{
+    const d = (r.date||'').slice(0,10);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return;
+    const t = r.roller_type; if(!t) return;
+    (byDate[d] = byDate[d] || {})[t] = (byDate[d][t]||0) + num(r.qty_rollers);
+  });
+  const dates = Object.keys(byDate).sort();
+  if(!dates.length){ el.innerHTML = `<div style="color:var(--text3);font-size:12px;margin:auto">ไม่มีข้อมูล</div>`; leg.innerHTML=''; return; }
+  let max = 0;
+  dates.forEach(d=>{ const tot=Object.values(byDate[d]).reduce((a,b)=>a+b,0); if(tot>max) max=tot; });
+  const present = new Set();
+  let html='';
+  dates.forEach(d=>{
+    const day = byDate[d];
+    const tot = Object.values(day).reduce((a,b)=>a+b,0);
+    const p = d.split('-');
+    let segs='';
+    ALL_TYPES.forEach(t=>{
+      const v = day[t]||0; if(!v) return; present.add(t);
+      const h = Math.max(Math.round(v/max*150), 2);
+      segs += `<div class="dc-seg" style="height:${h}px;background:${TYPE_COLORS[t]||TYPE_COLORS.default}" title="${t}: ${v}"></div>`;
+    });
+    html += `<div class="dc-col">
+      <span class="dc-total">${tot||''}</span>
+      <div class="dc-stack" title="${d} · รวม ${tot} ลูก">${segs}</div>
+      <span class="dc-lbl">${parseInt(p[2],10)}/${parseInt(p[1],10)}</span>
+    </div>`;
+  });
+  el.innerHTML = html;
+  leg.innerHTML = ALL_TYPES.filter(t=>present.has(t)).map(t=>
+    `<div class="legend-item"><div class="legend-dot" style="background:${TYPE_COLORS[t]}"></div><span>${t}</span></div>`).join('');
 }
 
 function renderMonthChart(year, belt, work){
