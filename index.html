@@ -145,10 +145,11 @@ td.num,th.num{text-align:right;font-family:var(--mono)}
 
 /* monthly stacked */
 .month-chart{display:flex;align-items:flex-end;gap:6px;height:200px;padding-top:10px;overflow-x:auto}
-.mc-col{flex:1;min-width:34px;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end}
-.mc-stack{width:60%;max-width:30px;display:flex;flex-direction:column-reverse;border-radius:3px 3px 0 0;overflow:hidden}
-.mc-seg{width:100%}
-.mc-total{font-size:10px;font-family:var(--mono);color:var(--text2)}
+.mc-col{flex:1;min-width:40px;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end}
+.mc-bars{display:flex;align-items:flex-end;justify-content:center;gap:4px;height:100%;width:100%}
+.mc-bar-wrap{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.mc-bar{width:12px;border-radius:3px 3px 0 0;min-height:0;transition:height .3s}
+.mc-v{font-size:9px;font-family:var(--mono);color:var(--text2);margin-bottom:2px;line-height:1}
 .mc-lbl{font-size:10px;color:var(--text3)}
 .chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:.75rem;justify-content:center}
 .chart-legend .legend-item{font-size:11px}
@@ -1000,17 +1001,19 @@ function renderMonthChart(year, belt, work){
   // [month][belt] = rollers
   const M = Array.from({length:13},()=>({BW1800:0,BW2200:0}));
   base.forEach(r=>{ const m=monthOf(r.date); if(m){ const b=r.belt==='BW2200'?'BW2200':'BW1800'; M[m][b]+=num(r.qty_rollers); } });
-  let max = 0; for(let m=1;m<=12;m++) max=Math.max(max, M[m].BW1800+M[m].BW2200);
+  // grouped bars: max = ค่ามากสุดของแต่ละ Belt (ไม่ใช่ผลรวม)
+  let max = 0; for(let m=1;m<=12;m++){ max=Math.max(max, M[m].BW1800, M[m].BW2200); }
   if(max===0){ el.innerHTML = `<div style="color:var(--text3);font-size:12px;margin:auto">ไม่มีข้อมูลในปี ${year}</div>`; return; }
+  const bar = (v,color,label)=>{
+    const h = v ? Math.max(Math.round(v/max*150), 2) : 0;
+    return `<div class="mc-bar-wrap"><span class="mc-v">${v||''}</span><div class="mc-bar" style="height:${h}px;background:${color}" title="${label}: ${v}"></div></div>`;
+  };
   let html='';
   for(let m=1;m<=12;m++){
-    const a=M[m].BW1800, b=M[m].BW2200, t=a+b;
-    const ha = Math.round(a/max*160), hb = Math.round(b/max*160);
+    const a=M[m].BW1800, b=M[m].BW2200;
     html += `<div class="mc-col">
-      <span class="mc-total">${t||''}</span>
-      <div class="mc-stack" style="height:${Math.max(ha+hb,t?2:0)}px" title="${MONTHS_FULL[m]}: ${a} (BW1800) + ${b} (BW2200)">
-        <div class="mc-seg" style="height:${ha}px;background:#3d8ef0"></div>
-        <div class="mc-seg" style="height:${hb}px;background:#2ecc71"></div>
+      <div class="mc-bars" title="${MONTHS_FULL[m]}">
+        ${bar(a,'#3d8ef0','BW1800')}${bar(b,'#2ecc71','BW2200')}
       </div>
       <span class="mc-lbl">${MONTHS_TH[m]}</span>
     </div>`;
